@@ -28,7 +28,7 @@ func main() {
 	ordersRepo := dal.NewOrdersRepository(*flagDir)
 	addr := fmt.Sprintf(":%d", *flagPort)
 	http.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
-
+		fmt.Println(r.URL.Path)
 		inventoryHandler(w, r, repo, menuRepo, ordersRepo)
 	})
 
@@ -101,21 +101,8 @@ func inventoryHandler(w http.ResponseWriter, r *http.Request, repo *dal.Inventor
 			}
 		}
 	case "reports":
-		if len(url) == 3 {
-			switch r.Method {
-			case http.MethodGet:
-				switch url[2] {
-				case "total-sales":
-					handler.GetTotalSales(w, r, ordersRepo)
-				case "popular-items":
 
-					handler.GetPopularItems(w, r, ordersRepo)
-				}
-
-			}
-		}
 	}
-
 }
 
 func initStorage(dir string) {
