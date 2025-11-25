@@ -5,6 +5,7 @@ import (
 	"database/sql"
 	"encoding/json"
 	"errors"
+	"log/slog"
 	"os"
 )
 
@@ -51,14 +52,37 @@ func (r *InventoryRepository) SaveItem(item models.InventoryItem) error {
 
 	return nil
 }
-
 func (r *InventoryRepository) GetAllItems() ([]models.InventoryItem, error) {
-	// 1. Выполняешь SELECT через r.conn.Query()
-	// 2. Проверяешь ошибку
-	// 3. Перебираешь результаты через rows.Next()
-	// 4. Для каждой строки делаешь Scan()
-	// 5. Добавляешь в результирующий слайс
-	// 6. Возвращаешь []InventoryItem
+	query := `SELECT id, ingredient_id, name, quantity, unit FROM inventory`
+	rows, err := r.conn.Query(query)
+	if err != nil {
+		slog.Error("Query error", "error", err) // ← ДОБАВЬ ЭТО
+		return nil, err
+	}
+	defer rows.Close()
+
+	var items []models.InventoryItem
+
+	for rows.Next() {
+		var item models.InventoryItem
+		var id int
+
+		err := rows.Scan(&id, &item.IngredientID, &item.Name, &item.Quantity, &item.Unit)
+		if err != nil {
+			slog.Error("Scan error", "error", err) // ← ДОБАВЬ ЭТО
+			return nil, err
+		}
+		items = append(items, item)
+	}
+
+	slog.Info("Items fetched", "count", len(items)) // ← ДОБАВЬ ЭТО
+
+	if err = rows.Err(); err != nil {
+		slog.Error("Rows error", "error", err) // ← ДОБАВЬ ЭТО
+		return nil, err
+	}
+
+	return items, nil
 }
 
 func (r *InventoryRepository) GetItem(id string) (models.InventoryItem, error) {
