@@ -2,9 +2,11 @@ package main
 
 import (
 	"bistro/internal/dal"
+	"bistro/internal/database"
 	"bistro/internal/handler"
 	"flag"
 	"fmt"
+	"log"
 	"log/slog"
 	"net/http"
 	"os"
@@ -12,27 +14,31 @@ import (
 )
 
 func main() {
-	flagDir := flag.String("dir", "data", "dir name")
+
 	flagPort := flag.Int("port", 8000, "Port number")
 	flagHelp := flag.Bool("help", false, "help flag")
 	flag.Parse()
-	slog.Info("StartingBistro", "port", *flagPort, "dataDir", *flagDir)
+	slog.Info("StartingBistro", "port", *flagPort)
 	if *flagHelp {
 		help()
 		os.Exit(0)
 	}
-	initStorage(*flagDir)
 	slog.Info("Storage initialized")
-	repo := dal.NewInventoryRepository(*flagDir)
-	menuRepo := dal.NewMenuRepository(*flagDir)
-	ordersRepo := dal.NewOrdersRepository(*flagDir)
+
+	conn, err := database.NewDB(database.LoadConfig())
+	if err != nil {
+		log.Fatal(err)
+	}
+	repo := dal.NewInventoryRepository(conn)
+	menuRepo := dal.NewMenuRepository(conn)
+	ordersRepo := dal.NewOrdersRepository(conn)
 	addr := fmt.Sprintf(":%d", *flagPort)
 	http.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
 		fmt.Println(r.URL.Path)
 		inventoryHandler(w, r, repo, menuRepo, ordersRepo)
 	})
 
-	err := http.ListenAndServe(addr, nil)
+	err = http.ListenAndServe(addr, nil)
 	if err != nil {
 		slog.Error("Server failed", "error", err)
 	}

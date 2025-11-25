@@ -8,8 +8,8 @@ import (
 )
 
 func (r *OrdersRepository) GetTotalSales() (models.TotalSales, error) {
-	filepath := r.dataDir + "/orders.json"
-	filepathMenu := r.dataDir + "/menu.json"
+	filepath := "/orders.json"
+	filepathMenu := "/menu.json"
 	var orders []models.Order
 	var menus []models.MenuItem
 	file, err := os.ReadFile(filepath)
@@ -48,7 +48,7 @@ func (r *OrdersRepository) GetTotalSales() (models.TotalSales, error) {
 }
 
 func (r *OrdersRepository) GetPopularItems() (map[string]int, error) {
-	filepath := r.dataDir + "/orders.json"
+	filepath := "/orders.json"
 	file, err := os.ReadFile(filepath)
 	if err != nil {
 		return map[string]int{}, err

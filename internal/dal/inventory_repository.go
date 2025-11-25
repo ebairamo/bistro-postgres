@@ -2,24 +2,24 @@ package dal
 
 import (
 	"bistro/models"
+	"database/sql"
 	"encoding/json"
 	"errors"
-	"fmt"
 	"os"
 )
 
 type InventoryRepository struct {
-	dataDir string
+	conn *sql.DB
 }
 
-func NewInventoryRepository(dataDir string) *InventoryRepository {
+func NewInventoryRepository(conn *sql.DB) *InventoryRepository {
 	return &InventoryRepository{
-		dataDir: dataDir,
+		conn: conn,
 	}
 }
 
 func (r *InventoryRepository) SaveItem(item models.InventoryItem) error {
-	filepath := r.dataDir + "/inventory.json"
+	filepath := "/inventory.json"
 
 	// Шаг 1: Прочитать весь файл в []byte
 	data, err := os.ReadFile(filepath)
@@ -53,26 +53,16 @@ func (r *InventoryRepository) SaveItem(item models.InventoryItem) error {
 }
 
 func (r *InventoryRepository) GetAllItems() ([]models.InventoryItem, error) {
-	filepath := r.dataDir + "/inventory.json"
-	data, err := os.ReadFile(filepath)
-	if err != nil {
-		return nil, err
-	}
-	inventoryItem := []models.InventoryItem{}
-	err = json.Unmarshal(data, &inventoryItem)
-	if err != nil {
-		return nil, err
-	}
-	fmt.Println(inventoryItem)
-	// TODO: прочитать файл
-	// TODO: распарсить JSON
-	// TODO: вернуть массив
-
-	return inventoryItem, nil
+	// 1. Выполняешь SELECT через r.conn.Query()
+	// 2. Проверяешь ошибку
+	// 3. Перебираешь результаты через rows.Next()
+	// 4. Для каждой строки делаешь Scan()
+	// 5. Добавляешь в результирующий слайс
+	// 6. Возвращаешь []InventoryItem
 }
 
 func (r *InventoryRepository) GetItem(id string) (models.InventoryItem, error) {
-	filePath := r.dataDir + "/inventory.json"
+	filePath := "/inventory.json"
 	data, err := os.ReadFile(filePath)
 	if err != nil {
 		return models.InventoryItem{}, err
@@ -89,7 +79,7 @@ func (r *InventoryRepository) GetItem(id string) (models.InventoryItem, error) {
 }
 
 func (r *InventoryRepository) UpdateInventoryItem(id string, item models.InventoryItem) (models.InventoryItem, error) {
-	filepath := r.dataDir + "/inventory.json"
+	filepath := "/inventory.json"
 	file, err := os.ReadFile(filepath)
 	if err != nil {
 		return item, err
@@ -126,7 +116,7 @@ func (r *InventoryRepository) UpdateInventoryItem(id string, item models.Invento
 }
 
 func (r *InventoryRepository) DeleteItem(id string) error {
-	filepath := r.dataDir + "/inventory.json"
+	filepath := "/inventory.json"
 	file, err := os.ReadFile(filepath)
 	if err != nil {
 		return err

@@ -2,22 +2,23 @@ package dal
 
 import (
 	"bistro/models"
+	"database/sql"
 	"encoding/json"
 	"errors"
 	"os"
 )
 
 type MenuRepository struct {
-	dataDir string
+	conn *sql.DB
 }
 
-func NewMenuRepository(dataDir string) *MenuRepository {
+func NewMenuRepository(conn *sql.DB) *MenuRepository {
 	return &MenuRepository{
-		dataDir: dataDir,
+		conn: conn,
 	}
 }
 func (r *MenuRepository) AddMenuItem(menuItem models.MenuItem) error {
-	filepath := r.dataDir + "/menu.json"
+	filepath := "/menu.json"
 	file, err := os.ReadFile(filepath)
 	if err != nil {
 		return err
@@ -43,7 +44,7 @@ func (r *MenuRepository) AddMenuItem(menuItem models.MenuItem) error {
 
 func (r *MenuRepository) GetMenuAllItems() ([]models.MenuItem, error) {
 
-	filepath := r.dataDir + "/menu.json"
+	filepath := "/menu.json"
 	file, err := os.ReadFile(filepath)
 	if err != nil {
 		return nil, err
@@ -57,7 +58,7 @@ func (r *MenuRepository) GetMenuAllItems() ([]models.MenuItem, error) {
 }
 
 func (r *MenuRepository) GetMenuItem(id string) (models.MenuItem, error) {
-	filepath := r.dataDir + "/menu.json"
+	filepath := "/menu.json"
 	file, err := os.ReadFile(filepath)
 	if err != nil {
 		return models.MenuItem{}, err
@@ -76,7 +77,7 @@ func (r *MenuRepository) GetMenuItem(id string) (models.MenuItem, error) {
 }
 
 func (r *MenuRepository) UpdateMenuItem(id string, menuItem models.MenuItem) error {
-	filepath := r.dataDir + "/menu.json"
+	filepath := "/menu.json"
 	file, err := os.ReadFile(filepath)
 	if err != nil {
 		return err
@@ -111,7 +112,7 @@ func (r *MenuRepository) UpdateMenuItem(id string, menuItem models.MenuItem) err
 }
 
 func (r *MenuRepository) DeleteMenuItem(id string) error {
-	filepath := r.dataDir + "/menu.json"
+	filepath := "/menu.json"
 	file, err := os.ReadFile(filepath)
 	if err != nil {
 		return err

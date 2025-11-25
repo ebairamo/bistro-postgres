@@ -2,24 +2,25 @@ package dal
 
 import (
 	"bistro/models"
+	"database/sql"
 	"encoding/json"
 	"errors"
 	"os"
 )
 
 type OrdersRepository struct {
-	dataDir string
+	conn *sql.DB
 }
 
-func NewOrdersRepository(dataDir string) *OrdersRepository {
+func NewOrdersRepository(conn *sql.DB) *OrdersRepository {
 	return &OrdersRepository{
-		dataDir: dataDir,
+		conn: conn,
 	}
 }
 
 func (r *OrdersRepository) PostOrder(order models.Order) error {
-	filepathMenu := r.dataDir + "/menu.json"
-	filePathInventory := r.dataDir + "/inventory.json"
+	filepathMenu := "/menu.json"
+	filePathInventory := "/inventory.json"
 	menuFile, err := os.ReadFile(filepathMenu)
 	if err != nil {
 		return err
@@ -114,7 +115,7 @@ func (r *OrdersRepository) PostOrder(order models.Order) error {
 	}
 
 	var orders []models.Order
-	orderFile, err := os.ReadFile(r.dataDir + "/orders.json")
+	orderFile, err := os.ReadFile("/orders.json")
 	if err != nil {
 		return err
 	}
@@ -125,7 +126,7 @@ func (r *OrdersRepository) PostOrder(order models.Order) error {
 		return err
 	}
 
-	err = os.WriteFile(r.dataDir+"/orders.json", orderFileMarshal, 0666)
+	err = os.WriteFile("/orders.json", orderFileMarshal, 0666)
 	if err != nil {
 		return err
 	}
@@ -133,7 +134,7 @@ func (r *OrdersRepository) PostOrder(order models.Order) error {
 }
 
 func (r *OrdersRepository) GetAllOrders() ([]models.Order, error) {
-	filepath := r.dataDir + "/orders.json"
+	filepath := "/orders.json"
 	var orders []models.Order
 	file, err := os.ReadFile(filepath)
 	if err != nil {
@@ -148,7 +149,7 @@ func (r *OrdersRepository) GetAllOrders() ([]models.Order, error) {
 
 func (r *OrdersRepository) GetOrderById(id string) (models.Order, error) {
 
-	filepath := r.dataDir + "/orders.json"
+	filepath := "/orders.json"
 	var orders []models.Order
 	file, err := os.ReadFile(filepath)
 	if err != nil {
@@ -168,7 +169,7 @@ func (r *OrdersRepository) GetOrderById(id string) (models.Order, error) {
 }
 
 func (r *OrdersRepository) UpdateOrderById(id string, status models.OrderStatus) (models.Order, error) {
-	filepath := r.dataDir + "/orders.json"
+	filepath := "/orders.json"
 	var orders []models.Order
 	var newOrders []models.Order
 	file, err := os.ReadFile(filepath)
@@ -206,7 +207,7 @@ func (r *OrdersRepository) UpdateOrderById(id string, status models.OrderStatus)
 }
 
 func (r *OrdersRepository) DeleteOrder(id string) error {
-	filepath := r.dataDir + "/orders.json"
+	filepath := "/orders.json"
 	file, err := os.ReadFile(filepath)
 	if err != nil {
 		return err
@@ -240,7 +241,7 @@ func (r *OrdersRepository) DeleteOrder(id string) error {
 }
 
 func (r *OrdersRepository) CloseOrders(id string) error {
-	filepath := r.dataDir + "/orders.json"
+	filepath := "/orders.json"
 	file, err := os.ReadFile(filepath)
 	if err != nil {
 		return err
