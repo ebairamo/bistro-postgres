@@ -1,0 +1,176 @@
+package main
+
+import (
+	"bistro/internal/dal"
+	"bistro/internal/handler"
+	"flag"
+	"fmt"
+	"log/slog"
+	"net/http"
+	"os"
+	"strings"
+)
+
+func main() {
+	flagDir := flag.String("dir", "data", "dir name")
+	flagPort := flag.Int("port", 8000, "Port number")
+	flagHelp := flag.Bool("help", false, "help flag")
+	flag.Parse()
+	slog.Info("StartingBistro", "port", *flagPort, "dataDir", *flagDir)
+	if *flagHelp {
+		help()
+		os.Exit(0)
+	}
+	initStorage(*flagDir)
+	slog.Info("Storage initialized")
+	repo := dal.NewInventoryRepository(*flagDir)
+	menuRepo := dal.NewMenuRepository(*flagDir)
+	ordersRepo := dal.NewOrdersRepository(*flagDir)
+	addr := fmt.Sprintf(":%d", *flagPort)
+	http.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
+
+		inventoryHandler(w, r, repo, menuRepo, ordersRepo)
+	})
+
+	err := http.ListenAndServe(addr, nil)
+	if err != nil {
+		slog.Error("Server failed", "error", err)
+	}
+}
+
+func inventoryHandler(w http.ResponseWriter, r *http.Request, repo *dal.InventoryRepository, menuRepo *dal.MenuRepository, ordersRepo *dal.OrdersRepository) {
+	url := strings.Split(r.URL.Path, "/")
+	switch url[1] {
+	case "inventory":
+		if len(url) == 2 {
+			switch r.Method {
+			case http.MethodPost:
+				handler.AddInventoryItem(w, r, repo)
+			case http.MethodGet:
+				handler.GetAllItems(w, r, repo)
+			}
+		}
+		if len(url) == 3 {
+			switch r.Method {
+			case http.MethodGet:
+				handler.GetItem(w, r, repo)
+			case http.MethodPut:
+				handler.UpdateInventoryItem(w, r, repo)
+			case http.MethodDelete:
+				handler.DeleteItem(w, r, repo)
+			}
+		}
+	case "menu":
+		if len(url) == 2 {
+			switch r.Method {
+			case http.MethodPost:
+				handler.AddMenuItem(w, r, menuRepo)
+			case http.MethodGet:
+				handler.GetMenuAllItems(w, r, menuRepo)
+			}
+		}
+		if len(url) == 3 {
+			switch r.Method {
+			case http.MethodGet:
+				handler.GetMenuItem(w, r, menuRepo, url[2])
+			case http.MethodPut:
+				handler.UpdateMenuItem(w, r, menuRepo, url[2])
+			case http.MethodDelete:
+				handler.DeleteMenuItem(w, r, menuRepo, url[2])
+			}
+		}
+	case "orders":
+		if len(url) == 2 {
+			switch r.Method {
+			case http.MethodPost:
+				handler.PostOrder(w, r, ordersRepo)
+			case http.MethodGet:
+				handler.GetAllOrders(w, r, ordersRepo)
+			}
+		}
+		if len(url) == 3 {
+			switch r.Method {
+			case http.MethodGet:
+				handler.GetOrderById(w, r, ordersRepo, url[2])
+			case http.MethodPut:
+				handler.UpdateOrderById(w, r, ordersRepo, url[2])
+			case http.MethodDelete:
+				handler.DeleteOrder(w, r, ordersRepo, url[2])
+			case http.MethodPost:
+				handler.CloseOrders(w, r, ordersRepo, url[2])
+			}
+		}
+	case "reports":
+		if len(url) == 3 {
+			switch r.Method {
+			case http.MethodGet:
+				switch url[2] {
+				case "total-sales":
+					handler.GetTotalSales(w, r, ordersRepo)
+				case "popular-items":
+
+					handler.GetPopularItems(w, r, ordersRepo)
+				}
+
+			}
+		}
+	}
+
+}
+
+func initStorage(dir string) {
+	err := os.Mkdir(dir, 0666)
+	if err != nil {
+		slog.Error("dir exists", "error", err)
+	}
+	inventoryDir := dir + "/inventory.json"
+	menuDir := dir + "/menu.json"
+	ordersDir := dir + "/orders.json"
+	_, err = os.Stat(inventoryDir)
+	if err != nil {
+		if os.IsNotExist(err) {
+			file, err := os.Create(inventoryDir)
+			if err != nil {
+				slog.Error("file exist", "error", err)
+			}
+			file.WriteString("[]")
+			file.Close()
+		}
+	}
+	_, err = os.Stat(menuDir)
+	if err != nil {
+		if os.IsNotExist(err) {
+			file, err := os.Create(menuDir)
+			if err != nil {
+				slog.Error("file exist", "error", err)
+			}
+			file.WriteString("[]")
+			file.Close()
+		}
+	}
+	_, err = os.Stat(ordersDir)
+	if err != nil {
+		if os.IsNotExist(err) {
+			file, err := os.Create(ordersDir)
+			if err != nil {
+				slog.Error("file exist", "error", err)
+			}
+			file.WriteString("[]")
+			file.Close()
+		}
+	}
+}
+
+func help() {
+	fmt.Println(`$ ./bistro --help
+Bistro Management System
+
+Usage:
+  hot-coffee [--port <N>] [--dir <S>] 
+  hot-coffee --help
+
+Options:
+  --help       Show this screen.
+  --port N     Port number.
+  --dir S      Path to the data directory.`)
+}

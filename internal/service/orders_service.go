@@ -1,0 +1,75 @@
+package service
+
+import (
+	"bistro/internal/dal"
+	"bistro/models"
+	"errors"
+)
+
+func PostOrder(order models.Order, ordersRepo *dal.OrdersRepository) error {
+	if order.ID == "" {
+		return errors.New("order id cannot be empty")
+	}
+	if order.CustomerName == "" {
+		return errors.New("CustomerName cannot be empty")
+	}
+	if order.CreatedAt == "" {
+		return errors.New("CreatedAt cannot be empry")
+	}
+	if order.Status == "" {
+		return errors.New("status cannot be empry")
+	}
+	for _, item := range order.Items {
+		if item.ProductID == "" {
+			return errors.New("item ProductId cannot be empty")
+		}
+		if item.Quantity <= 0 {
+			return errors.New("item.Quantity cannot be <= 0")
+		}
+	}
+	err := ordersRepo.PostOrder(order)
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
+func GetAllOrders(ordersRepo *dal.OrdersRepository) ([]models.Order, error) {
+	orders, err := ordersRepo.GetAllOrders()
+	if err != nil {
+		return nil, err
+	}
+	return orders, nil
+}
+
+func GetOrderById(ordersRepo *dal.OrdersRepository, id string) (models.Order, error) {
+	order, err := ordersRepo.GetOrderById(id)
+	if err != nil {
+		return models.Order{}, err
+	}
+	return order, err
+}
+
+func UpdateOrderById(ordersRepo *dal.OrdersRepository, id string, status models.OrderStatus) (models.Order, error) {
+	order, err := ordersRepo.UpdateOrderById(id, status)
+	if err != nil {
+		return order, err
+	}
+	return order, nil
+}
+
+func DeleteOrder(id string, ordersRepo *dal.OrdersRepository) error {
+	err := ordersRepo.DeleteOrder(id)
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
+func CloseOrders(id string, ordersRepo *dal.OrdersRepository) error {
+	err := ordersRepo.CloseOrders(id)
+	if err != nil {
+		return err
+	}
+	return nil
+}
