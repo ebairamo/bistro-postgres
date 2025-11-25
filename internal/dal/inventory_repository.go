@@ -5,6 +5,7 @@ import (
 	"database/sql"
 	"encoding/json"
 	"errors"
+	"fmt"
 	"log/slog"
 	"os"
 )
@@ -86,20 +87,18 @@ func (r *InventoryRepository) GetAllItems() ([]models.InventoryItem, error) {
 }
 
 func (r *InventoryRepository) GetItem(id string) (models.InventoryItem, error) {
-	filePath := "/inventory.json"
-	data, err := os.ReadFile(filePath)
+	var item models.InventoryItem
+	var idFromDb int
+	quary := `
+	SELECT id, ingredient_id, name, quantity, unit FROM inventory WHERE ingredient_id = $1
+	`
+	row := r.conn.QueryRow(quary, id)
+	err := row.Scan(&idFromDb, &item.IngredientID, &item.Name, &item.Quantity, &item.Unit)
 	if err != nil {
 		return models.InventoryItem{}, err
 	}
-	var items []models.InventoryItem
-	json.Unmarshal(data, &items)
-	for _, item := range items {
-		if id == item.IngredientID {
-			return item, nil
-		}
-	}
-
-	return models.InventoryItem{}, errors.New("item not found")
+	fmt.Println(item)
+	return item, nil
 }
 
 func (r *InventoryRepository) UpdateInventoryItem(id string, item models.InventoryItem) (models.InventoryItem, error) {
