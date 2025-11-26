@@ -3,7 +3,6 @@ package dal
 import (
 	"bistro/models"
 	"database/sql"
-	"fmt"
 	"log/slog"
 )
 
@@ -17,18 +16,27 @@ func NewMenuRepository(conn *sql.DB) *MenuRepository {
 	}
 }
 func (r *MenuRepository) AddMenuItem(menuItem models.MenuItem) error {
+	var ide int
 	query := `
-	INSERT INTO menu_items (product_id, name, description, price) VALUES ($1,$2,$3,$4)
+	INSERT INTO menu_items (product_id, name, description, price) 
+	VALUES ($1,$2,$3,$4)
+	RETURNING id
 	`
-	_, err := r.conn.Exec(query, menuItem.ID, menuItem.Name, menuItem.Description, menuItem.Price)
+	id := r.conn.QueryRow(query, menuItem.ID, menuItem.Name, menuItem.Description, menuItem.Price)
+	err := id.Scan(&ide)
 	if err != nil {
 		return err
 	}
 	for _, item := range menuItem.Ingredients {
-		fmt.Println(item)
-
+		query = `
+		INSERT INTO menu_item_ingredients (menu_item_id, ingredient_id, quantity)
+		VALUES ($1,$2,$3)
+		`
+		_, err := r.conn.Exec(query, ide, item.IngredientID, item.Quantity)
+		if err != nil {
+			return err
+		}
 	}
-	fmt.Println(len(menuItem.Ingredients))
 	return nil
 }
 
