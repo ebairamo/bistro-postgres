@@ -19,27 +19,13 @@ func NewMenuRepository(conn *sql.DB) *MenuRepository {
 	}
 }
 func (r *MenuRepository) AddMenuItem(menuItem models.MenuItem) error {
-	filepath := "/menu.json"
-	file, err := os.ReadFile(filepath)
+	query := `
+	INSERT INTO menu_items (product_id, name, description, price) VALUES ($1,$2,$3,$4)
+	`
+	_, err := r.conn.Exec(query, menuItem.ID, menuItem.Name, menuItem.Description, menuItem.Price)
 	if err != nil {
 		return err
 	}
-	var menuItems []models.MenuItem
-	err = json.Unmarshal(file, &menuItems)
-	if err != nil {
-		return err
-	}
-	menuItems = append(menuItems, menuItem)
-
-	data, err := json.Marshal(menuItems)
-	if err != nil {
-		return err
-	}
-	err = os.WriteFile(filepath, data, 0666)
-	if err != nil {
-		return err
-	}
-
 	return nil
 }
 
