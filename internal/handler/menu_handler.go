@@ -66,8 +66,13 @@ func UpdateMenuItem(w http.ResponseWriter, r *http.Request, menuRepo *dal.MenuRe
 		sendError(w, http.StatusNotFound, "StatusNotFound", err.Error())
 		return
 	}
+	item, err := service.GetMenuItem(menuRepo, id)
+	if err != nil {
+		sendError(w, http.StatusNotFound, "StatusNotFound", err.Error())
+		return
+	}
 	w.WriteHeader(http.StatusOK)
-	json.NewEncoder(w).Encode(menuItem)
+	json.NewEncoder(w).Encode(item)
 }
 
 func DeleteMenuItem(w http.ResponseWriter, r *http.Request, menuRepo *dal.MenuRepository, id string) {

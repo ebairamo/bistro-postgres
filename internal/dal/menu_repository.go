@@ -3,10 +3,7 @@ package dal
 import (
 	"bistro/models"
 	"database/sql"
-	"encoding/json"
-	"errors"
 	"log/slog"
-	"os"
 )
 
 type MenuRepository struct {
@@ -87,35 +84,15 @@ func (r *MenuRepository) UpdateMenuItem(id string, menuItem models.MenuItem) err
 }
 
 func (r *MenuRepository) DeleteMenuItem(id string) error {
-	filepath := "/menu.json"
-	file, err := os.ReadFile(filepath)
-	if err != nil {
-		return err
-	}
-	var menuItems []models.MenuItem
-	var newNenuItems []models.MenuItem
-	isFound := false
-	err = json.Unmarshal(file, &menuItems)
-	if err != nil {
-		return err
-	}
-	for _, item := range menuItems {
-		if item.ID == id {
-			isFound = true
-			continue
-		}
-		newNenuItems = append(newNenuItems, item)
-	}
-	if !isFound {
-		return errors.New("item not found")
-	}
-	f, err := json.Marshal(newNenuItems)
-	if err != nil {
-		return err
-	}
-	err = os.WriteFile(filepath, f, 0666)
+	query := `
+	DELETE FROM menu_items WHERE product_id = $1
+	`
+	_, err := r.conn.Exec(query, id)
 	if err != nil {
 		return err
 	}
 	return nil
+	// r.conn.Exec()
+	// check err
+	// return err
 }
