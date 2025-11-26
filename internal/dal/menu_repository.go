@@ -134,13 +134,35 @@ WHERE m.product_id = $1
 }
 
 func (r *MenuRepository) UpdateMenuItem(id string, menuItem models.MenuItem) error {
+	var idInt int
 	query := `
-	UPDATE menu_items SET  name = $1, description = $2, price = $3 WHERE product_id = $4
+	UPDATE menu_items SET  name = $1, description = $2, price = $3 
+	WHERE product_id = $4
+	RETURNING id
 	`
-	_, err := r.conn.Exec(query, menuItem.Name, menuItem.Description, menuItem.Price, menuItem.ID)
+	idReturn := r.conn.QueryRow(query, menuItem.Name, menuItem.Description, menuItem.Price, menuItem.ID)
+	err := idReturn.Scan(&idInt)
 	if err != nil {
 		return err
 	}
+	query = `
+	DELETE FROM menu_item_ingredients WHERE menu_item_id = $1
+	`
+	_, err = r.conn.Exec(query, idInt)
+	if err != nil {
+		return err
+	}
+	for _, item := range menuItem.Ingredients {
+		query = `
+		INSERT INTO menu_item_ingredients (menu_item_id, ingredient_id, quantity)
+		VALUES ($1,$2,$3)
+		`
+		_, err := r.conn.Exec(query, idInt, item.IngredientID, item.Quantity)
+		if err != nil {
+			return err
+		}
+	}
+
 	return nil
 }
 
