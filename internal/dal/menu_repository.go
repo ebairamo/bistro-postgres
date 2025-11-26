@@ -167,10 +167,23 @@ func (r *MenuRepository) UpdateMenuItem(id string, menuItem models.MenuItem) err
 }
 
 func (r *MenuRepository) DeleteMenuItem(id string) error {
+
 	query := `
-	DELETE FROM menu_items WHERE product_id = $1
+	DELETE FROM menu_item_ingredients 
+	WHERE menu_item_id IN (
+  	SELECT id FROM menu_items WHERE product_id = $1
+	)
 	`
 	_, err := r.conn.Exec(query, id)
+	if err != nil {
+		return err
+	}
+
+	query = `
+	DELETE FROM menu_items 
+	WHERE product_id = $1
+	`
+	_, err = r.conn.Exec(query, id)
 	if err != nil {
 		return err
 	}
