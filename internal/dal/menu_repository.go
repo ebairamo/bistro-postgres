@@ -27,9 +27,19 @@ func (r *MenuRepository) AddMenuItem(menuItem models.MenuItem) error {
 }
 
 func (r *MenuRepository) GetMenuAllItems() ([]models.MenuItem, error) {
-
+	var ing models.MenuItemIngredient
 	query := `
-		SELECT id,product_id, name, description, price FROM menu_items 
+		SELECT 
+		m.id,
+		m.product_id, 
+		m.name, 
+		m.description, 
+		m.price,
+		i.ingredient_id,
+		mi.quantity
+		FROM menu_items m
+		LEFT JOIN menu_item_ingredients mi ON m.id = mi.menu_item_id
+		LEFT JOIN inventory i ON mi.ingredient_id = i.id
 		`
 	rows, err := r.conn.Query(query)
 	if err != nil {
@@ -38,38 +48,63 @@ func (r *MenuRepository) GetMenuAllItems() ([]models.MenuItem, error) {
 	}
 	defer rows.Close()
 	var items []models.MenuItem
-	var ingredients []models.MenuItemIngredient
+	// var ingredients []models.MenuItemIngredient
 	for rows.Next() {
-		var item models.MenuItem
+		var Item models.MenuItem
 		var id int
-		err := rows.Scan(&id, &item.ID, &item.Name, &item.Description, &item.Price)
+		var quantity sql.NullFloat64
+		var ingId sql.NullString
+		err := rows.Scan(&id, &Item.ID, &Item.Name, &Item.Description, &Item.Price, &ingId, &quantity)
+		if quantity.Valid {
+			ing.Quantity = quantity.Float64
+		}
+		if ingId.Valid {
+			ing.IngredientID = ingId.String
+		}
 		if err != nil {
 			return []models.MenuItem{}, err
 		}
-		item.Ingredients = ingredients
-		items = append(items, item)
+
+		Item.Ingredients = append(Item.Ingredients, ing)
+
 	}
+	items = append(items, Item)
 
 	return items, nil
 }
 
 func (r *MenuRepository) GetMenuItem(id string) (models.MenuItem, error) {
-	var item models.MenuItem
-	var idDb int
 	query := `
-	SELECT id,product_id, name, description, price FROM menu_items WHERE product_id = $1
-	`
-	row := r.conn.QueryRow(query, id)
-
-	err := row.Scan(&idDb, &item.ID, &item.Name, &item.Description, &item.Price)
+SELECT 
+    m.id, 
+    m.product_id, 
+    m.name, 
+    m.description, 
+    m.price, 
+    i.ingredient_id,
+    mi.quantity
+FROM menu_items m
+LEFT JOIN menu_item_ingredients mi ON m.id = mi.menu_item_id
+LEFT JOIN inventory i ON mi.ingredient_id = i.id
+WHERE m.product_id = $1
+    `
+	rows, err := r.conn.Query(query, id)
 	if err != nil {
 		return models.MenuItem{}, err
 	}
-	// SELECT ... WHERE product_id = $1
-	// QueryRow() (не Query!)
-	// Scan()
-	// return item
-	return item, nil
+	var menuItem models.MenuItem
+	var ingredient models.MenuItemIngredient
+	var menuItemId int
+
+	for rows.Next() {
+
+		rows.Scan(&menuItemId, &menuItem.ID, &menuItem.Name, &menuItem.Description, &menuItem.Price, &ingredient.IngredientID, &ingredient.Quantity)
+
+		menuItem.Ingredients = append(menuItem.Ingredients, ingredient)
+
+	}
+
+	return menuItem, nil
 }
 
 func (r *MenuRepository) UpdateMenuItem(id string, menuItem models.MenuItem) error {
