@@ -6,7 +6,7 @@
             "server": "localhost",
             "port": 5432,
             "driver": "PostgreSQL",
-            "name": "bistro-postgres",
+            "name": "Frappuccino ",
             "database": "frappuccino",
             "username": "latte",
             "password": "latte"

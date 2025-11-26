@@ -11,16 +11,14 @@ import (
 )
 
 func AddInventoryItem(w http.ResponseWriter, r *http.Request, repo *dal.InventoryRepository) {
-	if r.Method != http.MethodPost {
-		sendError(w, http.StatusMethodNotAllowed, "Status Method Not Allowed", "Use post")
-		return
-	}
+
 	var item models.InventoryItem
 	err := json.NewDecoder(r.Body).Decode(&item)
 	if err != nil {
-		fmt.Println(err)
+		sendError(w, http.StatusInternalServerError, "Status Internal Server Error", err.Error())
 		return
 	}
+	fmt.Println(item)
 	err = service.SaveItem(item, repo)
 	if err != nil {
 		sendError(w, http.StatusInternalServerError, "Status Internal Server Error", err.Error())

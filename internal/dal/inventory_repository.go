@@ -3,11 +3,8 @@ package dal
 import (
 	"bistro/models"
 	"database/sql"
-	"encoding/json"
-	"errors"
 	"fmt"
 	"log/slog"
-	"os"
 )
 
 type InventoryRepository struct {
@@ -21,35 +18,18 @@ func NewInventoryRepository(conn *sql.DB) *InventoryRepository {
 }
 
 func (r *InventoryRepository) SaveItem(item models.InventoryItem) error {
-	filepath := "/inventory.json"
+	query := `INSERT INTO inventory (ingredient_id,name,quantity,unit) VALUES($1,$2,$3,$4)`
 
-	// Шаг 1: Прочитать весь файл в []byte
-	data, err := os.ReadFile(filepath)
+	slog.Info("Saving item", "ingredient_id", item.IngredientID, "name", item.Name)
+
+	result, err := r.conn.Exec(query, item.IngredientID, item.Name, item.Quantity, item.Unit)
 	if err != nil {
+		slog.Error("Save error", "error", err)
 		return err
 	}
 
-	// Шаг 2: JSON → Go структура (unmarshal)
-	var items []models.InventoryItem
-	err = json.Unmarshal(data, &items)
-	if err != nil {
-		return err
-	}
-
-	// Шаг 3: Добавить новый item в массив
-	items = append(items, item)
-
-	// Шаг 4: Go структура → JSON (marshal)
-	newData, err := json.MarshalIndent(items, "", "  ")
-	if err != nil {
-		return err
-	}
-
-	// Шаг 5: Записать обратно в файл
-	err = os.WriteFile(filepath, newData, 0644)
-	if err != nil {
-		return err
-	}
+	rows, _ := result.RowsAffected()
+	slog.Info("Item saved", "rows_affected", rows)
 
 	return nil
 }
@@ -102,73 +82,26 @@ func (r *InventoryRepository) GetItem(id string) (models.InventoryItem, error) {
 }
 
 func (r *InventoryRepository) UpdateInventoryItem(id string, item models.InventoryItem) (models.InventoryItem, error) {
-	filepath := "/inventory.json"
-	file, err := os.ReadFile(filepath)
+	query := `
+	UPDATE inventory SET  name = $1, quantity =$2, unit = $3 WHERE ingredient_id  = $4
+	`
+	_, err := r.conn.Exec(query, item.Name, item.Quantity, item.Unit, item.IngredientID)
 	if err != nil {
-		return item, err
-	}
-	var items []models.InventoryItem
-	var newItems []models.InventoryItem
-	isFound := false
-	err = json.Unmarshal(file, &items)
-	if err != nil {
-		return item, err
-	}
-
-	for _, ite := range items {
-		if ite.IngredientID == id {
-			newItems = append(newItems, item)
-			isFound = true
-			continue
-		}
-		newItems = append(newItems, ite)
-
-	}
-	if isFound == false {
-		return item, errors.New("id not found in inventory")
-	}
-	f, err := json.Marshal(newItems)
-	if err != nil {
-		return item, err
-	}
-	err = os.WriteFile(filepath, f, 0666)
-	if err != nil {
-		return item, err
+		return models.InventoryItem{}, err
 	}
 	return item, nil
 }
 
 func (r *InventoryRepository) DeleteItem(id string) error {
-	filepath := "/inventory.json"
-	file, err := os.ReadFile(filepath)
+	query := `
+	DELETE FROM inventory WHERE ingredient_id = $1
+	`
+	_, err := r.conn.Exec(query, id)
 	if err != nil {
 		return err
 	}
-	var items []models.InventoryItem
-	err = json.Unmarshal(file, &items)
-	if err != nil {
-		return err
-	}
-	var newItems []models.InventoryItem
-	isExsist := false
-	for _, item := range items {
-		if item.IngredientID == id {
-			isExsist = true
-			continue
-		}
-		newItems = append(newItems, item)
-	}
-	if !isExsist {
-		return errors.New("item is not Exists")
-	}
-	f, err := json.Marshal(newItems)
-	if err != nil {
-		return err
-	}
-	err = os.WriteFile(filepath, f, 0666)
-	if err != nil {
-		return err
-	}
-
 	return nil
+	// 1. Напиши SQL запрос DELETE WHERE ingredient_id
+	// 2. Выполни r.conn.Exec(query, id)
+	// 3. Проверь error и верни его
 }

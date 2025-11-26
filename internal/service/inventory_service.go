@@ -4,10 +4,12 @@ import (
 	"bistro/internal/dal"
 	"bistro/models"
 	"errors"
+	"fmt"
 	"log/slog"
 )
 
 func SaveItem(item models.InventoryItem, repo *dal.InventoryRepository) error {
+	fmt.Println(item)
 	if item.IngredientID == "" {
 		return errors.New("ingredient_id cannot be empty")
 	}
@@ -20,6 +22,7 @@ func SaveItem(item models.InventoryItem, repo *dal.InventoryRepository) error {
 	if item.Unit == "" {
 		return errors.New("unit cannot be empty")
 	}
+
 	err := repo.SaveItem(item)
 	if err != nil {
 		return err
