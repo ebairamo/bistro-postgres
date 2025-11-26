@@ -25,6 +25,7 @@ func (r *MenuRepository) AddMenuItem(menuItem models.MenuItem) error {
 		return err
 	}
 	for _, item := range menuItem.Ingredients {
+		fmt.Println(item)
 
 	}
 	fmt.Println(len(menuItem.Ingredients))
