@@ -5,6 +5,7 @@ import (
 	"database/sql"
 	"encoding/json"
 	"errors"
+	"log/slog"
 	"os"
 )
 
@@ -44,36 +45,48 @@ func (r *MenuRepository) AddMenuItem(menuItem models.MenuItem) error {
 
 func (r *MenuRepository) GetMenuAllItems() ([]models.MenuItem, error) {
 
-	filepath := "/menu.json"
-	file, err := os.ReadFile(filepath)
+	query := `
+		SELECT id,product_id, name, description, price FROM menu_items 
+		`
+	rows, err := r.conn.Query(query)
 	if err != nil {
-		return nil, err
+		slog.Error("Query error", "error", err)
+		return []models.MenuItem{}, nil
 	}
-	var menuItems []models.MenuItem
-	err = json.Unmarshal(file, &menuItems)
-	if err != nil {
-		return nil, err
+	defer rows.Close()
+	var items []models.MenuItem
+	var ingredients []models.MenuItemIngredient
+	for rows.Next() {
+		var item models.MenuItem
+		var id int
+		err := rows.Scan(&id, &item.ID, &item.Name, &item.Description, &item.Price)
+		if err != nil {
+			return []models.MenuItem{}, err
+		}
+		item.Ingredients = ingredients
+		items = append(items, item)
 	}
-	return menuItems, nil
+
+	return items, nil
 }
 
 func (r *MenuRepository) GetMenuItem(id string) (models.MenuItem, error) {
-	filepath := "/menu.json"
-	file, err := os.ReadFile(filepath)
+	var item models.MenuItem
+	var idDb int
+	query := `
+	SELECT id,product_id, name, description, price FROM menu_items WHERE product_id = $1
+	`
+	row := r.conn.QueryRow(query, id)
+
+	err := row.Scan(&idDb, &item.ID, &item.Name, &item.Description, &item.Price)
 	if err != nil {
 		return models.MenuItem{}, err
 	}
-	menuItems := []models.MenuItem{}
-	err = json.Unmarshal(file, &menuItems)
-	if err != nil {
-		return models.MenuItem{}, err
-	}
-	for _, item := range menuItems {
-		if item.ID == id {
-			return item, nil
-		}
-	}
-	return models.MenuItem{}, errors.New("menuItem not found")
+	// SELECT ... WHERE product_id = $1
+	// QueryRow() (не Query!)
+	// Scan()
+	// return item
+	return item, nil
 }
 
 func (r *MenuRepository) UpdateMenuItem(id string, menuItem models.MenuItem) error {
