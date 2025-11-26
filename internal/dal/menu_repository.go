@@ -3,6 +3,7 @@ package dal
 import (
 	"bistro/models"
 	"database/sql"
+	"fmt"
 	"log/slog"
 )
 
@@ -23,6 +24,10 @@ func (r *MenuRepository) AddMenuItem(menuItem models.MenuItem) error {
 	if err != nil {
 		return err
 	}
+	for _, item := range menuItem.Ingredients {
+
+	}
+	fmt.Println(len(menuItem.Ingredients))
 	return nil
 }
 
