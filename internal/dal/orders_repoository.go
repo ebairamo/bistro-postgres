@@ -134,15 +134,47 @@ func (r *OrdersRepository) PostOrder(order models.Order) error {
 }
 
 func (r *OrdersRepository) GetAllOrders() ([]models.Order, error) {
-	filepath := "/orders.json"
-	var orders []models.Order
-	file, err := os.ReadFile(filepath)
+	query := `
+	SELECT 
+	r.order_id, 
+	r.customer_name, 
+	r.status,
+	r.created_at,
+	ri.menu_item_id, 
+	ri.quantity
+	
+	
+	FROM orders r
+	LEFT JOIN order_items ri ON r.id = ri.order_id
+	ORDER BY r.order_id
+	`
+
+	rows, err := r.conn.Query(query)
 	if err != nil {
-		return orders, err
+		return []models.Order{}, err
 	}
-	err = json.Unmarshal(file, &orders)
-	if err != nil {
-		return orders, err
+
+	var order models.Order
+
+	var orders []models.Order
+	var preOrder models.Order
+	for rows.Next() {
+		var orderItem models.OrderItem
+		err := rows.Scan(&order.ID, &order.CustomerName, &order.Status, &order.CreatedAt, &orderItem.ProductID, &orderItem.Quantity)
+		if err != nil {
+			return []models.Order{}, err
+		}
+		if preOrder.ID == "" {
+			preOrder = order
+		}
+		if order.ID != preOrder.ID && preOrder.ID != "" {
+			orders = append(orders, preOrder)
+			preOrder = order
+		}
+		preOrder.Items = append(preOrder.Items, orderItem)
+	}
+	if preOrder.ID != "" {
+		orders = append(orders, preOrder)
 	}
 	return orders, nil
 }
