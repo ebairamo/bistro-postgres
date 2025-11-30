@@ -20,6 +20,11 @@ func PostOrder(w http.ResponseWriter, r *http.Request, ordersRepo *dal.OrdersRep
 		sendError(w, http.StatusInternalServerError, "StatusInternalServerError", err.Error())
 		return
 	}
+	order, err = service.GetOrderById(ordersRepo, order.ID)
+	if err != nil {
+		sendError(w, http.StatusInternalServerError, "StatusInternalServerError", err.Error())
+		return
+	}
 	w.WriteHeader(http.StatusCreated)
 	json.NewEncoder(w).Encode(order)
 

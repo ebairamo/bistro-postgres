@@ -19,18 +19,28 @@ func NewOrdersRepository(conn *sql.DB) *OrdersRepository {
 }
 
 func (r *OrdersRepository) PostOrder(order models.Order) error {
-	var MenuStruct []models.MenuItem
+	var orderId int
 	query := `
-	SELECT 
-	m.product_id, 
-	m.name, 
-	m.description, 
-	m.price,
-	mi.ingredient_id, 
-	mi.quantity
-	FROM menu_items m
-	LEFT JOIN menu_item_ingredients mi
+	INSERT INTO orders (order_id, customer_name, status) 
+	VALUES($1,$2,$3)
+	RETURNING id
 	`
+	id := r.conn.QueryRow(query, order.ID, order.CustomerName, order.Status)
+	err := id.Scan(&orderId)
+	if err != nil {
+		return err
+	}
+	for _, item := range order.Items {
+		query = `
+	INSERT INTO order_items (order_id, menu_item_id, quantity)
+	VALUES($1,$2,$3)
+	`
+		_, err := r.conn.Exec(query, orderId, item.ProductID, item.Quantity)
+		if err != nil {
+			return err
+		}
+	}
+	return nil
 
 	// filepathMenu := "/menu.json"
 	// filePathInventory := "/inventory.json"

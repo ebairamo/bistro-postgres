@@ -13,9 +13,6 @@ func PostOrder(order models.Order, ordersRepo *dal.OrdersRepository) error {
 	if order.CustomerName == "" {
 		return errors.New("CustomerName cannot be empty")
 	}
-	if order.CreatedAt == "" {
-		return errors.New("CreatedAt cannot be empry")
-	}
 	if order.Status == "" {
 		return errors.New("status cannot be empry")
 	}
