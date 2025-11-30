@@ -180,24 +180,32 @@ func (r *OrdersRepository) GetAllOrders() ([]models.Order, error) {
 }
 
 func (r *OrdersRepository) GetOrderById(id string) (models.Order, error) {
-
-	filepath := "/orders.json"
-	var orders []models.Order
-	file, err := os.ReadFile(filepath)
+	query := `
+SELECT 
+r.order_id, 
+	r.customer_name, 
+	r.status,
+	r.created_at,
+	ri.menu_item_id,
+	ri.quantity
+FROM orders r
+LEFT JOIN order_items ri ON r.id = ri.order_id
+WHERE r.order_id = $1
+`
+	rows, err := r.conn.Query(query, id)
 	if err != nil {
 		return models.Order{}, err
 	}
-	err = json.Unmarshal(file, &orders)
-	if err != nil {
-		return models.Order{}, err
-	}
-	for _, order := range orders {
-		if order.ID == id {
-			return order, nil
-		}
-	}
-	return models.Order{}, errors.New("order not found")
+	var order models.Order
+	var orderItem models.OrderItem
 
+	for rows.Next() {
+		rows.Scan(&order.ID, &order.CustomerName, &order.Status, &order.CreatedAt, &orderItem.ProductID, &orderItem.Quantity)
+		order.Items = append(order.Items, orderItem)
+
+	}
+
+	return order, nil
 }
 
 func (r *OrdersRepository) UpdateOrderById(id string, status models.OrderStatus) (models.Order, error) {
