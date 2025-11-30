@@ -50,7 +50,12 @@ func UpdateOrderById(w http.ResponseWriter, r *http.Request, ordersRepo *dal.Ord
 		sendError(w, http.StatusInternalServerError, "StatusInternalServerError", err.Error())
 		return
 	}
-	order, err := service.UpdateOrderById(ordersRepo, id, status)
+	err = service.UpdateOrderById(ordersRepo, id, status)
+	if err != nil {
+		sendError(w, http.StatusInternalServerError, "StatusInternalServerError", err.Error())
+		return
+	}
+	order, err := service.GetOrderById(ordersRepo, id)
 	if err != nil {
 		sendError(w, http.StatusInternalServerError, "StatusInternalServerError", err.Error())
 		return
