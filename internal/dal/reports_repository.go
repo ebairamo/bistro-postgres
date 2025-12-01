@@ -2,68 +2,50 @@ package dal
 
 import (
 	"bistro/models"
-	"encoding/json"
-	"fmt"
-	"os"
+	"database/sql"
 )
 
 func (r *OrdersRepository) GetTotalSales() (models.TotalSales, error) {
-	filepath := "/orders.json"
-	filepathMenu := "/menu.json"
-	var orders []models.Order
-	var menus []models.MenuItem
-	file, err := os.ReadFile(filepath)
-	if err != nil {
-		return models.TotalSales{}, err
-	}
-	err = json.Unmarshal(file, &orders)
-	if err != nil {
-		return models.TotalSales{}, err
-	}
-
-	fileMenu, err := os.ReadFile(filepathMenu)
-	if err != nil {
-		return models.TotalSales{}, err
-	}
-	err = json.Unmarshal(fileMenu, &menus)
+	var total_amount sql.NullFloat64
+	quary := `
+	SELECT SUM(total_amount) as total_sales FROM orders WHERE status = 'close'
+	`
+	row := r.conn.QueryRow(quary)
+	err := row.Scan(&total_amount)
 	if err != nil {
 		return models.TotalSales{}, err
 	}
 
-	var totalSales models.TotalSales
-	var total float64
-	for _, order := range orders {
-		for _, orderItems := range order.Items {
-			for _, menu := range menus {
-
-				if orderItems.ProductID == menu.ID {
-					total = total + (menu.Price * float64(orderItems.Quantity))
-
-				}
-			}
-		}
-	}
-	totalSales.TotalSales = total
-	return totalSales, nil
+	return models.TotalSales{
+		TotalSales: total_amount.Float64,
+	}, nil
 }
 
-func (r *OrdersRepository) GetPopularItems() (map[string]int, error) {
-	filepath := "/orders.json"
-	file, err := os.ReadFile(filepath)
+func (r *OrdersRepository) GetPopularItems() ([]models.PopularItems, error) {
+	var itemCounts []models.PopularItems
+	var itemCount models.PopularItems
+	query := `
+	SELECT m.name, SUM(oi.quantity) as total_quantity
+	FROM order_items oi
+	JOIN menu_items m ON oi.menu_item_id = m.id
+	GROUP BY m.id, m.name
+	ORDER BY total_quantity DESC
+	`
+	rows, err := r.conn.Query(query)
 	if err != nil {
-		return map[string]int{}, err
+		return []models.PopularItems{}, err
 	}
-	var orders []models.Order
-	itemCounts := make(map[string]int)
-	err = json.Unmarshal(file, &orders)
-	if err != nil {
-		return map[string]int{}, err
-	}
-	for _, order := range orders {
-		for _, orderItems := range order.Items {
-			itemCounts[orderItems.ProductID] += orderItems.Quantity
+	for rows.Next() {
+		var name string
+		var quantity int
+		err = rows.Scan(&name, &quantity)
+		if err != nil {
+			return []models.PopularItems{}, err
 		}
+		itemCount.Name = name
+		itemCount.Quantity = quantity
+		itemCounts = append(itemCounts, itemCount)
+
 	}
-	fmt.Println(itemCounts)
 	return itemCounts, nil
 }

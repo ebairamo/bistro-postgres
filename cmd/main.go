@@ -107,7 +107,17 @@ func inventoryHandler(w http.ResponseWriter, r *http.Request, repo *dal.Inventor
 			}
 		}
 	case "reports":
-
+		if len(url) == 3 {
+			switch r.Method {
+			case http.MethodGet:
+				if url[2] == "total-sales" {
+					handler.GetTotalSales(w, r, ordersRepo)
+				}
+				if url[2] == "popular-items" {
+					handler.GetPopularItems(w, r, ordersRepo)
+				}
+			}
+		}
 	}
 }
 

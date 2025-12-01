@@ -13,10 +13,10 @@ func GetTotalSales(ordersRepo *dal.OrdersRepository) (models.TotalSales, error) 
 	return totalSales, nil
 }
 
-func GetPopularItems(ordersRepo *dal.OrdersRepository) (map[string]int, error) {
+func GetPopularItems(ordersRepo *dal.OrdersRepository) ([]models.PopularItems, error) {
 	popularItems, err := ordersRepo.GetPopularItems()
 	if err != nil {
-		return map[string]int{}, err
+		return []models.PopularItems{}, err
 	}
 	return popularItems, nil
 }
