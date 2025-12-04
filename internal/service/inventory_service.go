@@ -68,3 +68,8 @@ func DeleteItem(id string, repo *dal.InventoryRepository) error {
 	slog.Info("Item deleted", "id", id)
 	return nil
 }
+
+func GetLeftOvers(pageInt int, pageSizeInt int, repo *dal.InventoryRepository) ([]models.InventoryItem, error) {
+
+	return []models.InventoryItem{}, nil
+}

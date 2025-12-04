@@ -7,6 +7,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/http"
+	"strconv"
 	"strings"
 )
 
@@ -90,5 +91,21 @@ func DeleteItem(w http.ResponseWriter, r *http.Request, repo *dal.InventoryRepos
 func GetLeftOvers(w http.ResponseWriter, r *http.Request, repo *dal.InventoryRepository) {
 	page := r.URL.Query().Get("page")
 	pageSize := r.URL.Query().Get("pageSize")
-	fmt.Println(r.URL.Path, page, pageSize)
+	pageInt, err := strconv.Atoi(page)
+	if err != nil {
+		sendError(w, http.StatusInternalServerError, "StatusInternalServerError", err.Error())
+		return
+	}
+	pageSizeInt, err := strconv.Atoi(pageSize)
+	if err != nil {
+		sendError(w, http.StatusInternalServerError, "StatusInternalServerError", err.Error())
+		return
+	}
+
+	items, err := service.GetLeftOvers(pageInt, pageSizeInt, repo)
+	if err != nil {
+		sendError(w, http.StatusInternalServerError, "StatusInternalServerError", err.Error())
+		return
+	}
+	json.NewEncoder(w).Encode(items)
 }
