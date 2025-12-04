@@ -159,17 +159,15 @@ func (r *OrdersRepository) PostOrder(order models.Order) error {
 func (r *OrdersRepository) GetAllOrders() ([]models.Order, error) {
 	query := `
 	SELECT 
-	r.order_id, 
+	r.order_id,
 	r.customer_name, 
-	r.status,
+	r.status, 
 	r.created_at,
-	ri.menu_item_id, 
+	ri.menu_item_id,
 	ri.quantity
+	FROM orders r 
+	JOIN order_items ri ON ri.order_id = r.id
 	
-	
-	FROM orders r
-	LEFT JOIN order_items ri ON r.id = ri.order_id
-	ORDER BY r.order_id
 	`
 
 	rows, err := r.conn.Query(query)
@@ -184,6 +182,7 @@ func (r *OrdersRepository) GetAllOrders() ([]models.Order, error) {
 	for rows.Next() {
 		var orderItem models.OrderItem
 		err := rows.Scan(&order.ID, &order.CustomerName, &order.Status, &order.CreatedAt, &orderItem.ProductID, &orderItem.Quantity)
+
 		if err != nil {
 			return []models.Order{}, err
 		}

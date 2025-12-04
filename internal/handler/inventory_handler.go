@@ -86,3 +86,9 @@ func DeleteItem(w http.ResponseWriter, r *http.Request, repo *dal.InventoryRepos
 		w.WriteHeader(http.StatusNoContent)
 	}
 }
+
+func GetLeftOvers(w http.ResponseWriter, r *http.Request, repo *dal.InventoryRepository) {
+	page := r.URL.Query().Get("page")
+	pageSize := r.URL.Query().Get("pageSize")
+	fmt.Println(r.URL.Path, page, pageSize)
+}

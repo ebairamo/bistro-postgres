@@ -59,7 +59,12 @@ func inventoryHandler(w http.ResponseWriter, r *http.Request, repo *dal.Inventor
 		if len(url) == 3 {
 			switch r.Method {
 			case http.MethodGet:
-				handler.GetItem(w, r, repo)
+				if url[2] == "getLeftOvers" {
+					handler.GetLeftOvers(w, r, repo)
+				} else {
+					handler.GetItem(w, r, repo)
+				}
+
 			case http.MethodPut:
 				handler.UpdateInventoryItem(w, r, repo)
 			case http.MethodDelete:
