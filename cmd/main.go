@@ -121,49 +121,6 @@ func inventoryHandler(w http.ResponseWriter, r *http.Request, repo *dal.Inventor
 	}
 }
 
-func initStorage(dir string) {
-	err := os.Mkdir(dir, 0666)
-	if err != nil {
-		slog.Error("dir exists", "error", err)
-	}
-	inventoryDir := dir + "/inventory.json"
-	menuDir := dir + "/menu.json"
-	ordersDir := dir + "/orders.json"
-	_, err = os.Stat(inventoryDir)
-	if err != nil {
-		if os.IsNotExist(err) {
-			file, err := os.Create(inventoryDir)
-			if err != nil {
-				slog.Error("file exist", "error", err)
-			}
-			file.WriteString("[]")
-			file.Close()
-		}
-	}
-	_, err = os.Stat(menuDir)
-	if err != nil {
-		if os.IsNotExist(err) {
-			file, err := os.Create(menuDir)
-			if err != nil {
-				slog.Error("file exist", "error", err)
-			}
-			file.WriteString("[]")
-			file.Close()
-		}
-	}
-	_, err = os.Stat(ordersDir)
-	if err != nil {
-		if os.IsNotExist(err) {
-			file, err := os.Create(ordersDir)
-			if err != nil {
-				slog.Error("file exist", "error", err)
-			}
-			file.WriteString("[]")
-			file.Close()
-		}
-	}
-}
-
 func help() {
 	fmt.Println(`$ ./bistro --help
 Bistro Management System
