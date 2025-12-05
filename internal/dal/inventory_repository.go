@@ -105,3 +105,31 @@ func (r *InventoryRepository) DeleteItem(id string) error {
 	// 2. Выполни r.conn.Exec(query, id)
 	// 3. Проверь error и верни его
 }
+
+func (r *InventoryRepository) GetLeftOvers(pageInt int, pageSizeInt int) ([]models.InventoryItem, error) {
+	var item models.InventoryItem
+	var items []models.InventoryItem
+	offset := (pageInt - 1) * pageSizeInt
+	query := `
+	SELECT ingredient_id,
+	name, 
+	quantity, 
+	unit
+	FROM inventory
+	LIMIT $1 OFFSET $2
+	`
+	rows, err := r.conn.Query(query, pageSizeInt, offset)
+	if err != nil {
+		return []models.InventoryItem{}, err
+	}
+	for rows.Next() {
+		rows.Scan(&item.IngredientID, &item.Name, &item.Quantity, &item.Unit)
+		items = append(items, item)
+	}
+	response = models.ResponseGetLeftOvers{
+		CurrentPage: offset,
+		PageSize:    pageSizeInt,
+	}
+
+	return items, nil
+}

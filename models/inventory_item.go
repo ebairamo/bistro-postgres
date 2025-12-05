@@ -6,3 +6,10 @@ type InventoryItem struct {
 	Quantity     float64 `json:"quantity"`
 	Unit         string  `json:"unit"`
 }
+
+type ResponseGetLeftOvers struct {
+	CurrentPage int  `json:"currentPage"`
+	HasNextPage bool `json:"hasNextPage"`
+	TotalPages  int  `json:"totalPages"`
+	PageSize    int  `json:"pageSize"`
+}
