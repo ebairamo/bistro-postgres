@@ -91,6 +91,12 @@ func DeleteItem(w http.ResponseWriter, r *http.Request, repo *dal.InventoryRepos
 func GetLeftOvers(w http.ResponseWriter, r *http.Request, repo *dal.InventoryRepository) {
 	page := r.URL.Query().Get("page")
 	pageSize := r.URL.Query().Get("pageSize")
+	if page == "" {
+		page = "1"
+	}
+	if pageSize == "" {
+		pageSize = "10"
+	}
 	pageInt, err := strconv.Atoi(page)
 	if err != nil {
 		sendError(w, http.StatusInternalServerError, "StatusInternalServerError", err.Error())

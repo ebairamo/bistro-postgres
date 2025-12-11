@@ -8,8 +8,9 @@ type InventoryItem struct {
 }
 
 type ResponseGetLeftOvers struct {
-	CurrentPage int  `json:"currentPage"`
-	HasNextPage bool `json:"hasNextPage"`
-	TotalPages  int  `json:"totalPages"`
-	PageSize    int  `json:"pageSize"`
+	CurrentPage int             `json:"currentPage"`
+	HasNextPage bool            `json:"hasNextPage"`
+	TotalPages  int             `json:"totalPages"`
+	PageSize    int             `json:"pageSize"`
+	Data        []InventoryItem `json:"data"`
 }

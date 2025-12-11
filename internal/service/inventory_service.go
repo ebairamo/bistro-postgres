@@ -69,16 +69,16 @@ func DeleteItem(id string, repo *dal.InventoryRepository) error {
 	return nil
 }
 
-func GetLeftOvers(pageInt int, pageSizeInt int, repo *dal.InventoryRepository) ([]models.InventoryItem, error) {
+func GetLeftOvers(pageInt int, pageSizeInt int, repo *dal.InventoryRepository) (models.ResponseGetLeftOvers, error) {
 	if pageInt <= 0 {
-		return []models.InventoryItem{}, errors.New("page cannot be > 0")
+		return models.ResponseGetLeftOvers{}, errors.New("page cannot be > 0")
 	}
 	if pageSizeInt <= 0 {
-		return []models.InventoryItem{}, errors.New("page size cannot be > 0")
+		return models.ResponseGetLeftOvers{}, errors.New("page size cannot be > 0")
 	}
-	items, err := repo.GetLeftOvers(pageInt, pageSizeInt)
+	response, err := repo.GetLeftOvers(pageInt, pageSizeInt)
 	if err != nil {
-		return []models.InventoryItem{}, err
+		return models.ResponseGetLeftOvers{}, err
 	}
-	return items, nil
+	return response, nil
 }

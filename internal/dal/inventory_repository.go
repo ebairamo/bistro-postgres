@@ -106,7 +106,7 @@ func (r *InventoryRepository) DeleteItem(id string) error {
 	// 3. Проверь error и верни его
 }
 
-func (r *InventoryRepository) GetLeftOvers(pageInt int, pageSizeInt int) ([]models.InventoryItem, error) {
+func (r *InventoryRepository) GetLeftOvers(pageInt int, pageSizeInt int) (models.ResponseGetLeftOvers, error) {
 	var item models.InventoryItem
 	var items []models.InventoryItem
 	offset := (pageInt - 1) * pageSizeInt
@@ -120,16 +120,34 @@ func (r *InventoryRepository) GetLeftOvers(pageInt int, pageSizeInt int) ([]mode
 	`
 	rows, err := r.conn.Query(query, pageSizeInt, offset)
 	if err != nil {
-		return []models.InventoryItem{}, err
+		return models.ResponseGetLeftOvers{}, err
 	}
 	for rows.Next() {
 		rows.Scan(&item.IngredientID, &item.Name, &item.Quantity, &item.Unit)
 		items = append(items, item)
 	}
-	response = models.ResponseGetLeftOvers{
-		CurrentPage: offset,
+	defer rows.Close()
+	query = `
+	SELECT COUNT(ingredient_id)
+	FROM inventory
+	`
+	total := 0
+	hasNewPage := false
+
+	row := r.conn.QueryRow(query)
+	row.Scan(&total)
+
+	totalPage := (total + pageSizeInt - 1) / pageSizeInt
+	if totalPage > pageInt {
+		hasNewPage = true
+	}
+	response := models.ResponseGetLeftOvers{
+		CurrentPage: pageInt,
 		PageSize:    pageSizeInt,
+		TotalPages:  totalPage,
+		HasNextPage: hasNewPage,
+		Data:        items,
 	}
 
-	return items, nil
+	return response, nil
 }
