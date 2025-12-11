@@ -122,11 +122,12 @@ func (r *InventoryRepository) GetLeftOvers(pageInt int, pageSizeInt int) (models
 	if err != nil {
 		return models.ResponseGetLeftOvers{}, err
 	}
+	defer rows.Close()
 	for rows.Next() {
 		rows.Scan(&item.IngredientID, &item.Name, &item.Quantity, &item.Unit)
 		items = append(items, item)
 	}
-	defer rows.Close()
+
 	query = `
 	SELECT COUNT(ingredient_id)
 	FROM inventory
@@ -136,7 +137,6 @@ func (r *InventoryRepository) GetLeftOvers(pageInt int, pageSizeInt int) (models
 
 	row := r.conn.QueryRow(query)
 	row.Scan(&total)
-
 	totalPage := (total + pageSizeInt - 1) / pageSizeInt
 	if totalPage > pageInt {
 		hasNewPage = true

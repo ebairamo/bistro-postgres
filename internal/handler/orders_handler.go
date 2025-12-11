@@ -86,3 +86,13 @@ func CloseOrders(w http.ResponseWriter, r *http.Request, ordersRepo *dal.OrdersR
 	}
 	w.WriteHeader(http.StatusOK)
 }
+func NumberOfOrderedItems(w http.ResponseWriter, r *http.Request, ordersRepo *dal.OrdersRepository) {
+	startDate := r.URL.Query().Get("startDate")
+	endDate := r.URL.Query().Get("endDate")
+	items, err := service.NumberOfOrderedItems(startDate, endDate, ordersRepo)
+	if err != nil {
+		sendError(w, http.StatusInternalServerError, "StatusInternalServerError", err.Error())
+		return
+	}
+	json.NewEncoder(w).Encode(items)
+}

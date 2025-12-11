@@ -299,3 +299,7 @@ func (r *OrdersRepository) CloseOrders(id string) error {
 	}
 	return nil
 }
+
+func (r *OrdersRepository) NumberOfOrderedItems(startDate string, endDate string) ([]models.OrderItem, error) {
+
+}

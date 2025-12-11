@@ -102,7 +102,11 @@ func inventoryHandler(w http.ResponseWriter, r *http.Request, repo *dal.Inventor
 		if len(url) == 3 {
 			switch r.Method {
 			case http.MethodGet:
-				handler.GetOrderById(w, r, ordersRepo, url[2])
+				if url[2] == "numberOfOrderedItems" {
+					handler.NumberOfOrderedItems(w, r, ordersRepo)
+				} else {
+					handler.GetOrderById(w, r, ordersRepo, url[2])
+				}
 			case http.MethodPut:
 				handler.UpdateOrderById(w, r, ordersRepo, url[2])
 			case http.MethodDelete:

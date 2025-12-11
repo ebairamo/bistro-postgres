@@ -70,3 +70,11 @@ func CloseOrders(id string, ordersRepo *dal.OrdersRepository) error {
 	}
 	return nil
 }
+
+func NumberOfOrderedItems(startDate string, endDate string, ordersRepo *dal.OrdersRepository) ([]models.OrderItem, error) {
+	items, err := ordersRepo.NumberOfOrderedItems(startDate, endDate)
+	if err != nil {
+		return []models.OrderItem{}, err
+	}
+	return items, nil
+}
